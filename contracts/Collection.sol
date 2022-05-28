@@ -9,11 +9,13 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract Collection is Ownable{
 
     IERC721 NFT;
-    
+    IERC20 PaymentToken;
+
     struct directListing{
         address owner;
         uint price;
@@ -29,6 +31,7 @@ contract Collection is Ownable{
 
     uint public FEE = 200; //2% since we divide by 10_000
     uint public FEEBalance;
+    uint public differentialAmount = 10 ether;
     mapping(address=>uint) public balance;
     mapping(uint=>uint) public listed; //0 - not, 1 = direct, 2 = auction
 
@@ -66,13 +69,14 @@ contract Collection is Ownable{
         emit tokenListed(msg.sender, tokenId,2,price);
     }
 
-    function buyToken(uint tokenId) external payable{
+    function buyToken(uint tokenId,uint amount) external {
         require(listed[tokenId] == 1,"Token not direct listed");
         directListing storage listing = directSales[tokenId];
         require(listing.owner != msg.sender,"Can't buy own token");
-        require(msg.value >= listing.price,"Not enough paid");
-        uint fee = msg.value * FEE/10_000;
-        balance[listing.owner] += msg.value - fee;
+        require(amount >= listing.price,"Not enough paid");
+        require(PaymentToken.transferFrom(msg.sender,address(this), amount),"Payment not received");
+        uint fee = amount * FEE/10_000;
+        balance[listing.owner] += amount - fee;
         FEEBalance += fee;
         NFT.transferFrom(address(this),msg.sender,tokenId);
         delete directSales[tokenId];
@@ -80,11 +84,12 @@ contract Collection is Ownable{
         emit tokenBought(msg.sender,tokenId);
     }
 
-    function bidToken(uint tokenId) external payable{
+    function bidToken(uint tokenId,uint amount) external {
         require(listed[tokenId] == 2,"Token not auction listed");
         auctionListing storage listing = auctionSales[tokenId];
         require(listing.owner != msg.sender,"Can't buy own token");
-        require(msg.value > listing.highestBid,"Bid higher");
+        require(amount > listing.highestBid + differentialAmount,"Bid higher");
+        require(PaymentToken.transferFrom(msg.sender, address(this), amount),"Payment not made");
         require(msg.sender != listing.highestBidder,"Can't bid twice");
         require(block.timestamp < listing.timeEnd || listing.timeEnd == 0,"Auction over");
         if(listing.highestBidder != address(0)){
@@ -93,9 +98,9 @@ contract Collection is Ownable{
         else{
             listing.timeEnd = block.timestamp + listing.duration;
         }
-        listing.highestBid = msg.value;
+        listing.highestBid = amount;
         listing.highestBidder = msg.sender;
-        emit receivedBid(msg.sender,tokenId,msg.value);
+        emit receivedBid(msg.sender,tokenId,amount);
     }
 
     function retrieveToken(uint tokenId) external{
@@ -133,23 +138,26 @@ contract Collection is Ownable{
                 emit tokenDeListed(tokenId[i],2);
             }
         }
-
     }
 
     function retrieveBalance() external {
         uint amount = balance[msg.sender];
         balance[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
+        PaymentToken.transfer(msg.sender,amount);
     }
 
     function retrieveFee() external onlyOwner{
         uint amount = FEEBalance;
         FEEBalance = 0;
-        payable(msg.sender).transfer(amount);
+        PaymentToken.transfer(msg.sender,amount);
     }
 
     function setFee(uint _fee) external onlyOwner{
         FEE = _fee;
+    }
+
+    function setPriceDifferential(uint _amount) external onlyOwner{
+        differentialAmount = _amount;
     }
 
 }
