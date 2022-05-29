@@ -31,8 +31,12 @@ contract Collection is Ownable{
 
     uint public FEE = 200; //2% since we divide by 10_000
     uint public royaltyPercentage; 
+    uint public royaltyBalance;
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
+
+    address public creatorAddress;
+
     mapping(address=>uint) public balance;
     mapping(uint=>uint) public listed; //0 - not, 1 = direct, 2 = auction
 
@@ -44,11 +48,17 @@ contract Collection is Ownable{
     event receivedBid(address indexed bidder,uint indexed tokenId,uint amount);
     event tokenDeListed(uint indexed tokenId,uint8 listingType);
 
-    constructor(address _collection,address _token) {
+    constructor(address _collection,address _token,address _creator,uint _percentage) {
         NFT = IERC721(_collection);
         PaymentToken = IERC20(_token);
+        creatorAddress = _creator;
+        royaltyPercentage = _percentage;
     }
    
+   modifier onlyCreator{
+       require(msg.sender == creatorAddress,"Not creator");
+       _;
+   }
 
     //@notice direct listing
     function listToken(uint tokenId,uint price) external {
@@ -78,8 +88,10 @@ contract Collection is Ownable{
         require(amount >= listing.price,"Not enough paid");
         require(PaymentToken.transferFrom(msg.sender,address(this), amount),"Payment not received");
         uint fee = amount * FEE/10_000;
-        balance[listing.owner] += amount - fee;
+        uint royalty = amount * royaltyPercentage / 10_000;
+        balance[listing.owner] += amount - fee - royalty;
         FEEBalance += fee;
+        royaltyBalance += royalty;
         NFT.transferFrom(address(this),msg.sender,tokenId);
         delete directSales[tokenId];
         delete listed[tokenId];
@@ -112,8 +124,10 @@ contract Collection is Ownable{
         require(listing.highestBidder != address(0),"Token not sold");
         require(msg.sender == listing.highestBidder,"Not highest bidder");  
         uint fee = listing.highestBid * FEE/10_000;
-        balance[listing.owner] += listing.highestBid - fee;
+        uint royalty = listing.highestBid * royaltyPercentage/10_000;
+        balance[listing.owner] += listing.highestBid - fee - royalty;
         FEEBalance += fee;
+        royaltyBalance += royalty;
         NFT.transferFrom(address(this),msg.sender,tokenId);
         emit tokenBought(msg.sender,tokenId);
         delete auctionSales[tokenId];
@@ -152,6 +166,20 @@ contract Collection is Ownable{
         uint amount = FEEBalance;
         FEEBalance = 0;
         PaymentToken.transfer(msg.sender,amount);
+    }
+
+    function setRoyaltyPercentage(uint _percentage) external onlyOwner{
+        royaltyPercentage = _percentage;
+    }
+
+    function setCreatorAddress(address _creator) external onlyCreator{
+        creatorAddress = _creator;
+    }
+
+    function retrieveRoyalty() external onlyCreator{
+        uint amount = royaltyBalance;
+        royaltyBalance = 0;
+        PaymentToken.transfer(creatorAddress,amount);
     }
 
     function setFee(uint _fee) external onlyOwner{
