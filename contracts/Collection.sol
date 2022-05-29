@@ -122,14 +122,14 @@ contract Collection is Ownable{
         auctionListing storage listing = auctionSales[tokenId];
         require(block.timestamp >= listing.timeEnd,"Auction not over");
         require(listing.highestBidder != address(0),"Token not sold");
-        require(msg.sender == listing.highestBidder,"Not highest bidder");  
+        require(msg.sender == listing.highestBidder || msg.sender == listing.owner,"Not highest bidder");  
         uint fee = listing.highestBid * FEE/10_000;
         uint royalty = listing.highestBid * royaltyPercentage/10_000;
         balance[listing.owner] += listing.highestBid - fee - royalty;
         FEEBalance += fee;
         royaltyBalance += royalty;
-        NFT.transferFrom(address(this),msg.sender,tokenId);
-        emit tokenBought(msg.sender,tokenId);
+        NFT.transferFrom(address(this),listing.highestBidder,tokenId);
+        emit tokenBought(listing.highestBidder,tokenId);
         delete auctionSales[tokenId];
         delete listed[tokenId];
     }
