@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
-
+const dotenv = require("dotenv");
+dotenv.config({path: __dirname + '/.env'});
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
@@ -24,3 +25,4 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
       accounts: [`${process.env.PRIVATE_KEY}`]
     }
   }
+ }
