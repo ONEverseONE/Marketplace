@@ -30,6 +30,7 @@ contract Collection is Ownable{
     }
 
     uint public FEE = 200; //2% since we divide by 10_000
+    uint public royaltyPercentage; 
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
     mapping(address=>uint) public balance;
@@ -43,8 +44,9 @@ contract Collection is Ownable{
     event receivedBid(address indexed bidder,uint indexed tokenId,uint amount);
     event tokenDeListed(uint indexed tokenId,uint8 listingType);
 
-    constructor(address _collection) {
+    constructor(address _collection,address _token) {
         NFT = IERC721(_collection);
+        PaymentToken = IERC20(_token);
     }
    
 
