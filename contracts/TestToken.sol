@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-/// @title Whale Game - Tamagotchi
 /// @author Ace
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";

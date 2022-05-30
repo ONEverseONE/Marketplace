@@ -102,16 +102,17 @@ contract Collection is Ownable{
         require(listed[tokenId] == 2,"Token not auction listed");
         auctionListing storage listing = auctionSales[tokenId];
         require(listing.owner != msg.sender,"Can't buy own token");
-        require(amount > listing.highestBid + differentialAmount,"Bid higher");
-        require(PaymentToken.transferFrom(msg.sender, address(this), amount),"Payment not made");
         require(msg.sender != listing.highestBidder,"Can't bid twice");
         require(block.timestamp < listing.timeEnd || listing.timeEnd == 0,"Auction over");
         if(listing.highestBidder != address(0)){
+            require(amount >= listing.highestBid + differentialAmount,"Bid higher");
             balance[listing.highestBidder] += listing.highestBid;
         }
         else{
+            require(amount >= listing.highestBid,"Bid higher");
             listing.timeEnd = block.timestamp + listing.duration;
         }
+        require(PaymentToken.transferFrom(msg.sender, address(this), amount),"Payment not made");
         listing.highestBid = amount;
         listing.highestBidder = msg.sender;
         emit receivedBid(msg.sender,tokenId,amount);
@@ -149,6 +150,9 @@ contract Collection is Ownable{
                 require(auctionSales[tokenId[i]].owner == msg.sender,"Not owner");
                 require(auctionSales[tokenId[i]].timeEnd > block.timestamp || auctionSales[tokenId[i]].highestBidder == address(0),"Auction over or received bids");
                 NFT.transferFrom(address(this),msg.sender,tokenId[i]);
+                if(auctionSales[tokenId[i]].highestBidder != address(0)){
+                    balance[auctionSales[tokenId[i]].highestBidder] += auctionSales[tokenId[i]].highestBid;
+                }
                 delete auctionSales[tokenId[i]];
                 delete listed[tokenId[i]];
                 emit tokenDeListed(tokenId[i],2);
