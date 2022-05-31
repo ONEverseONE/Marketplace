@@ -30,7 +30,7 @@ contract Collection is Ownable{
     }
 
     uint public FEE = 200; //2% since we divide by 10_000
-    uint public royaltyPercentage; 
+    uint public royaltyPercentage;
     uint public royaltyBalance;
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
@@ -54,11 +54,11 @@ contract Collection is Ownable{
         creatorAddress = _creator;
         royaltyPercentage = _percentage;
     }
-   
-   modifier onlyCreator{
-       require(msg.sender == creatorAddress,"Not creator");
-       _;
-   }
+
+    modifier onlyCreator{
+        require(msg.sender == creatorAddress,"Not creator");
+        _;
+    }
 
     //@notice direct listing
     function listToken(uint tokenId,uint price) external {
@@ -69,7 +69,7 @@ contract Collection is Ownable{
         directSales[tokenId] = directListing(msg.sender,price);
         emit tokenListed(msg.sender, tokenId,1,price);
     }
-    
+
     //@notice auction listing
     function listToken(uint tokenId,uint price,uint duration) external {
         require(NFT.ownerOf(tokenId) == msg.sender,"Not owner");
@@ -102,16 +102,17 @@ contract Collection is Ownable{
         require(listed[tokenId] == 2,"Token not auction listed");
         auctionListing storage listing = auctionSales[tokenId];
         require(listing.owner != msg.sender,"Can't buy own token");
-        require(amount > listing.highestBid + differentialAmount,"Bid higher");
-        require(PaymentToken.transferFrom(msg.sender, address(this), amount),"Payment not made");
         require(msg.sender != listing.highestBidder,"Can't bid twice");
         require(block.timestamp < listing.timeEnd || listing.timeEnd == 0,"Auction over");
         if(listing.highestBidder != address(0)){
+            require(amount >= listing.highestBid + differentialAmount,"Bid higher");
             balance[listing.highestBidder] += listing.highestBid;
         }
         else{
+            require(amount >= listing.highestBid,"Bid higher");
             listing.timeEnd = block.timestamp + listing.duration;
         }
+        require(PaymentToken.transferFrom(msg.sender, address(this), amount),"Payment not made");
         listing.highestBid = amount;
         listing.highestBidder = msg.sender;
         emit receivedBid(msg.sender,tokenId,amount);
@@ -122,7 +123,7 @@ contract Collection is Ownable{
         auctionListing storage listing = auctionSales[tokenId];
         require(block.timestamp >= listing.timeEnd,"Auction not over");
         require(listing.highestBidder != address(0),"Token not sold");
-        require(msg.sender == listing.highestBidder || msg.sender == listing.owner,"Not highest bidder");  
+        require(msg.sender == listing.highestBidder || msg.sender == listing.owner,"Not highest bidder");
         uint fee = listing.highestBid * FEE/10_000;
         uint royalty = listing.highestBid * royaltyPercentage/10_000;
         balance[listing.owner] += listing.highestBid - fee - royalty;
@@ -149,6 +150,9 @@ contract Collection is Ownable{
                 require(auctionSales[tokenId[i]].owner == msg.sender,"Not owner");
                 require(auctionSales[tokenId[i]].timeEnd > block.timestamp || auctionSales[tokenId[i]].highestBidder == address(0),"Auction over or received bids");
                 NFT.transferFrom(address(this),msg.sender,tokenId[i]);
+                if(auctionSales[tokenId[i]].highestBidder != address(0)){
+                    balance[auctionSales[tokenId[i]].highestBidder] += auctionSales[tokenId[i]].highestBid;
+                }
                 delete auctionSales[tokenId[i]];
                 delete listed[tokenId[i]];
                 emit tokenDeListed(tokenId[i],2);
