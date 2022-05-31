@@ -14,11 +14,13 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
+  // const Token = await hre.ethers.getContractFactory("TestToken");
+  // const token = await Token.deploy();
   const Greeter = await hre.ethers.getContractFactory("Collection");
-  const greeter = await Greeter.deploy("0x701d1907fd9Ed5A1B4d6f005D602C723F9fD47fa");
+  const greeter = await Greeter.deploy("0x701d1907fd9Ed5A1B4d6f005D602C723F9fD47fa","0x8f6cdaA89122Bd9FaE6d006d8DC88B738F1B537d","0xE2Ccad70370800c5319261Be716B41732F802f62",0);
 
   await greeter.deployed();
-
+  // console.log("Token Address:",token.address);
   console.log("Collection deployed to:", greeter.address);
 }
 
