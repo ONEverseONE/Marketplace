@@ -37,6 +37,8 @@ contract Collection is Ownable{
 
     address public creatorAddress;
 
+    mapping(address=>bool) public isApproved;
+
     mapping(address=>uint) public balance;
     mapping(uint=>uint) public listed; //0 - not, 1 = direct, 2 = auction
 
@@ -89,7 +91,8 @@ contract Collection is Ownable{
         require(PaymentToken.transferFrom(msg.sender,address(this), amount),"Payment not received");
         uint fee = amount * FEE/10_000;
         uint royalty = amount * royaltyPercentage / 10_000;
-        balance[listing.owner] += amount - fee - royalty;
+        PaymentToken.transfer(listing.owner,amount-fee-royalty);
+        // balance[listing.owner] += amount - fee - royalty;
         FEEBalance += fee;
         royaltyBalance += royalty;
         NFT.transferFrom(address(this),msg.sender,tokenId);
@@ -106,7 +109,7 @@ contract Collection is Ownable{
         require(block.timestamp < listing.timeEnd || listing.timeEnd == 0,"Auction over");
         if(listing.highestBidder != address(0)){
             require(amount >= listing.highestBid + differentialAmount,"Bid higher");
-            balance[listing.highestBidder] += listing.highestBid;
+            PaymentToken.transfer(listing.highestBidder,listing.highestBid);
         }
         else{
             require(amount >= listing.highestBid,"Bid higher");
@@ -123,10 +126,11 @@ contract Collection is Ownable{
         auctionListing storage listing = auctionSales[tokenId];
         require(block.timestamp >= listing.timeEnd,"Auction not over");
         require(listing.highestBidder != address(0),"Token not sold");
-        require(msg.sender == listing.highestBidder || msg.sender == listing.owner,"Not highest bidder");  
+        require(msg.sender == listing.highestBidder || msg.sender == listing.owner,"Not highest bidder or owner");  
         uint fee = listing.highestBid * FEE/10_000;
         uint royalty = listing.highestBid * royaltyPercentage/10_000;
-        balance[listing.owner] += listing.highestBid - fee - royalty;
+        // balance[listing.owner] += listing.highestBid - fee - royalty;
+        PaymentToken.transfer(listing.owner,listing.highestBid-fee-royalty);
         FEEBalance += fee;
         royaltyBalance += royalty;
         NFT.transferFrom(address(this),listing.highestBidder,tokenId);
@@ -151,7 +155,8 @@ contract Collection is Ownable{
                 require(auctionSales[tokenId[i]].timeEnd > block.timestamp || auctionSales[tokenId[i]].highestBidder == address(0),"Auction over or received bids");
                 NFT.transferFrom(address(this),msg.sender,tokenId[i]);
                 if(auctionSales[tokenId[i]].highestBidder != address(0)){
-                    balance[auctionSales[tokenId[i]].highestBidder] += auctionSales[tokenId[i]].highestBid;
+                    PaymentToken.transfer(auctionSales[tokenId[i]].highestBidder,auctionSales[tokenId[i]].highestBid);
+                    // balance[auctionSales[tokenId[i]].highestBidder] += auctionSales[tokenId[i]].highestBid;
                 }
                 delete auctionSales[tokenId[i]];
                 delete listed[tokenId[i]];
@@ -160,30 +165,43 @@ contract Collection is Ownable{
         }
     }
 
-    function retrieveBalance() external {
-        uint amount = balance[msg.sender];
-        balance[msg.sender] = 0;
-        PaymentToken.transfer(msg.sender,amount);
-    }
+    // function retrieveBalance() external {
+    //     uint amount = balance[msg.sender];
+    //     balance[msg.sender] = 0;
+    //     PaymentToken.transfer(msg.sender,amount);
+    // }
 
-    function retrieveFee() external onlyOwner{
+    function retrieveFee(address _to) external {
+        require(msg.sender == owner() || isApproved[msg.sender],"Not owner or approved");
         uint amount = FEEBalance;
         FEEBalance = 0;
-        PaymentToken.transfer(msg.sender,amount);
+        PaymentToken.transfer(_to,amount);
     }
 
     function setRoyaltyPercentage(uint _percentage) external onlyOwner{
         royaltyPercentage = _percentage;
     }
 
-    function setCreatorAddress(address _creator) external onlyCreator{
+    function setCreatorAddress(address _creator) external onlyOwner{
         creatorAddress = _creator;
     }
 
-    function retrieveRoyalty() external onlyCreator{
+    function setApproved(address _address,bool _approve) external onlyOwner{
+        isApproved[_address] = _approve;
+    }
+
+    function retrieveRoyalty(address _to) external onlyCreator{
         uint amount = royaltyBalance;
         royaltyBalance = 0;
-        PaymentToken.transfer(creatorAddress,amount);
+        PaymentToken.transfer(_to,amount);
+    }
+
+    function setNFT(address _nft) external onlyOwner{
+        NFT = IERC721(_nft);
+    }
+
+    function setPaymentToken(address _token) external onlyOwner{
+        PaymentToken = IERC20(_token);
     }
 
     function setFee(uint _fee) external onlyOwner{
