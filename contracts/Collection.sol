@@ -39,7 +39,7 @@ contract Collection is Ownable{
 
     mapping(address=>bool) public isApproved;
 
-    mapping(address=>uint) public balance;
+    // mapping(address=>uint) public balance;
     mapping(uint=>uint) public listed; //0 - not, 1 = direct, 2 = auction
 
     mapping(uint=>directListing) public directSales;
