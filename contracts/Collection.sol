@@ -30,7 +30,7 @@ contract Collection is Ownable{
     }
 
     uint public FEE = 200; //2% since we divide by 10_000
-    uint public royaltyPercentage; 
+    uint public royaltyPercentage;
     uint public royaltyBalance;
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
@@ -56,11 +56,11 @@ contract Collection is Ownable{
         creatorAddress = _creator;
         royaltyPercentage = _percentage;
     }
-   
-   modifier onlyCreator{
-       require(msg.sender == creatorAddress,"Not creator");
-       _;
-   }
+
+    modifier onlyCreator{
+        require(msg.sender == creatorAddress,"Not creator");
+        _;
+    }
 
     //@notice direct listing
     function listToken(uint tokenId,uint price) external {
@@ -71,7 +71,7 @@ contract Collection is Ownable{
         directSales[tokenId] = directListing(msg.sender,price);
         emit tokenListed(msg.sender, tokenId,1,price);
     }
-    
+
     //@notice auction listing
     function listToken(uint tokenId,uint price,uint duration) external {
         require(NFT.ownerOf(tokenId) == msg.sender,"Not owner");
