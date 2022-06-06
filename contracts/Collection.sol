@@ -35,6 +35,11 @@ contract Collection is Ownable{
         uint royaltyBalance;
     }
 
+    // struct delistTokens{
+    //     address _contract;
+    //     uint[] tokenIds;
+    // }
+
     uint public FEE = 200; //2% since we divide by 10_000
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
@@ -48,7 +53,7 @@ contract Collection is Ownable{
     mapping(address=>mapping(uint=>directListing)) public directSales;
     mapping(address=>mapping(uint=>auctionListing)) public auctionSales;
 
-    event tokenListed(address indexed _contract,address indexed owner,uint indexed tokenId,uint8 listingType,uint price);
+    event tokenListed(address indexed _contract,address indexed owner,uint indexed tokenId,uint8 listingType,uint price,uint duration);
     event tokenBought(address indexed _contract,address indexed buyer,uint indexed tokenId);
     event receivedBid(address indexed _contract,address indexed bidder,uint indexed tokenId,uint amount);
     event tokenDeListed(address indexed _contract,uint indexed tokenId,uint8 listingType);
@@ -67,7 +72,7 @@ contract Collection is Ownable{
         NFT.transferFrom(msg.sender, address(this), tokenId);
         listed[_contract][tokenId] = 1;
         directSales[_contract][tokenId] = directListing(msg.sender,price);
-        emit tokenListed(_contract,msg.sender, tokenId,1,price);
+        emit tokenListed(_contract,msg.sender, tokenId,1,price,0);
     }
 
     //@notice auction listing
@@ -80,7 +85,7 @@ contract Collection is Ownable{
         NFT.transferFrom(msg.sender,address(this),tokenId);
         listed[_contract][tokenId] = 2;
         auctionSales[_contract][tokenId] = auctionListing(msg.sender,duration,0,price,address(0));
-        emit tokenListed(_contract,msg.sender, tokenId,2,price);
+        emit tokenListed(_contract,msg.sender, tokenId,2,price,duration);
     }
 
     function buyToken(address _contract,uint tokenId,uint amount) external {
@@ -178,7 +183,7 @@ contract Collection is Ownable{
 
     function setMarketplace(address _contract,address _creator,uint royaltyPercentage) external onlyOwner{
         royaltyInfo[_contract] = collectionInfo(_creator,royaltyPercentage,0);
-        isApproved[_contract] = true;
+        whitelistContracts[_contract] = true;
         emit marketplaceStarted(_contract, _creator, royaltyPercentage);
     }
 
