@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
 const dotenv = require("dotenv");
 dotenv.config({path: __dirname + '/.env'});
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -23,6 +24,11 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     harmonytestnet:{
       url:"https://api.s0.b.hmny.io",
       accounts: [`${process.env.PRIVATE_KEY}`]
+    }
+  },
+  etherscan: {
+    apiKey: {
+      harmonyTest: `${process.env.ETHERSCAN_KEY}`,
     }
   }
 };

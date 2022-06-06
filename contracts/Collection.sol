@@ -36,12 +36,8 @@ contract Collection is Ownable{
     }
 
     uint public FEE = 200; //2% since we divide by 10_000
-    // uint public royaltyPercentage;
-    // uint public royaltyBalance;
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
-
-    address public creatorAddress;
 
     mapping(address=>bool) public isApproved;
     mapping(address=>bool) public whitelistContracts;

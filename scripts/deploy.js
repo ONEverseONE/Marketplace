@@ -3,25 +3,50 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+const { parseEther } = require("ethers/lib/utils");
+const { ethers } = require("hardhat");
 const hre = require("hardhat");
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
 
   // We get the contract to deploy
-  // const Token = await hre.ethers.getContractFactory("TestToken");
-  // const token = await Token.deploy();
+  console.log("Deploying ERC20 token");
+  const Token = await hre.ethers.getContractFactory("ERC20Token");
+  const token = await Token.deploy();
+  console.log("Token deployed at:", token.address);
+  console.log("Minting 1000 tokens to owner address");
+  await token.mint(parseEther('1000'));
+  console.log("Tokens minted");
+  await hre.run("verify:verify", {
+    address: token.address,
+    contract: "contracts/ERC20Token.sol:ERC20Token",
+    network:"harmonytestnet"
+  });
+  console.log("Deploying NFT contract")
+  const NFT = await hre.ethers.getContractFactory("NFT");
+  const nft = await NFT.deploy();
+  console.log("NFT contract deployed at:",nft.address);
+  console.log("Minting 10 tokens to owner address");
+  await nft.mint(10);
+  console.log("Tokens minted");
+  await hre.run("verify:verify", {
+    address: nft.address,
+    contract: "contracts/NFT.sol:NFT",
+    network:"harmonytestnet"
+  });
+  console.log("Deploying marketplace contract");
   const Greeter = await hre.ethers.getContractFactory("Collection");
-  const greeter = await Greeter.deploy("0x701d1907fd9Ed5A1B4d6f005D602C723F9fD47fa","0x8f6cdaA89122Bd9FaE6d006d8DC88B738F1B537d","0xE2Ccad70370800c5319261Be716B41732F802f62",0);
-
+  const greeter = await Greeter.deploy();
   await greeter.deployed();
-  // console.log("Token Address:",token.address);
-  console.log("Collection deployed to:", greeter.address);
+  console.log("Marketplace deployed to:", greeter.address);
+  await hre.run("verify:verify", {
+    address: greeter.address,
+    contract: "contracts/Collection.sol:Collection",
+    network:"harmonytestnet"
+  });
+  console.log("Setting a market for our NFT contract");
+  greeter.setMarketplace(nft.address,ethers.constants.AddressZero,0);
+  console.log("Marketplace set and ready to use");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
