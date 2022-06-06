@@ -54,6 +54,10 @@ contract Collection is Ownable{
     event tokenDeListed(address indexed _contract,uint indexed tokenId,uint8 listingType);
     event marketplaceStarted(address indexed _contract,address indexed creator,uint royaltyPercentage);
 
+    constructor(address _paymentToken) {
+        PaymentToken = IERC20(_paymentToken);
+    }
+
     //@notice direct listing
     function listToken(address _contract,uint tokenId,uint price) external {
         require(whitelistContracts[_contract],"Contract not listed");
@@ -181,10 +185,6 @@ contract Collection is Ownable{
     function editMarketplace(address _contract,address _creator,uint royaltyPercentage) external onlyOwner{
         royaltyInfo[_contract].creator = _creator;
         royaltyInfo[_contract].royaltyPercentage = royaltyPercentage;
-    }
-
-    function setCreatorAddress(address _creator) external onlyOwner{
-        creatorAddress = _creator;
     }
 
     function setApproved(address _address,bool _approve) external onlyOwner{

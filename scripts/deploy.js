@@ -36,11 +36,12 @@ async function main() {
   });
   console.log("Deploying marketplace contract");
   const Greeter = await hre.ethers.getContractFactory("Collection");
-  const greeter = await Greeter.deploy();
+  const greeter = await Greeter.deploy(token.address);
   await greeter.deployed();
   console.log("Marketplace deployed to:", greeter.address);
   await hre.run("verify:verify", {
     address: greeter.address,
+    constructorArguments: [token.address],
     contract: "contracts/Collection.sol:Collection",
     network:"harmonytestnet"
   });
