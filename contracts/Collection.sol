@@ -35,11 +35,6 @@ contract Collection is Ownable{
         uint royaltyBalance;
     }
 
-    // struct delistTokens{
-    //     address _contract;
-    //     uint[] tokenIds;
-    // }
-
     uint public FEE = 200; //2% since we divide by 10_000
     uint public FEEBalance;
     uint public differentialAmount = 10 ether;
@@ -94,7 +89,7 @@ contract Collection is Ownable{
         directListing storage listing = directSales[_contract][tokenId];
         require(listing.owner != msg.sender,"Can't buy own token");
         require(amount >= listing.price,"Not enough paid");
-        require(PaymentToken.transferFrom(msg.sender,address(this), amount),"Payment not received");
+        require(PaymentToken.transferFrom(msg.sender,address(this),amount),"Payment not received");
         uint fee = amount * FEE/10_000;
         uint royalty = amount * royaltyInfo[_contract].royaltyPercentage / 10_000;
         PaymentToken.transfer(listing.owner,amount-fee-royalty);

@@ -19,17 +19,17 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
  module.exports = {
-  solidity: "0.8.12",
-  networks:{
-    harmonytestnet:{
-      url:"https://api.s0.b.hmny.io",
-      accounts: [`${process.env.PRIVATE_KEY}`]
-    }
-  },
-  etherscan: {
-    apiKey: {
-      harmonyTest: `${process.env.ETHERSCAN_KEY}`,
-    }
-  }
+  solidity: "0.8.7",
+  // networks:{
+  //   harmonytestnet:{
+  //     url:"https://api.s0.b.hmny.io",
+  //     accounts: [`${process.env.PRIVATE_KEY}`]
+  //   }
+  // },
+  // etherscan: {
+  //   apiKey: {
+  //     harmonyTest: `${process.env.ETHERSCAN_KEY}`,
+  //   }
+  // }
 };
 
