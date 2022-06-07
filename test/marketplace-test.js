@@ -215,9 +215,7 @@ describe('★ ONEVERSE Marketplace Test Suite ★', async () =>{
     });
 
     it("Royalty and Dev Fees % changed", async () =>{
-      await expect(market.setMarketplace(nft2.address, creator2.address, 200))
-          .to.emit(market, 'marketplaceStarted')
-          .withArgs(nft2.address, creator2.address, 200);
+      await market.editMarketplace(nft2.address, creator2.address, 200);
       await market.setFee(400);
     });
 
@@ -249,7 +247,7 @@ describe('★ ONEVERSE Marketplace Test Suite ★', async () =>{
 
     it("Royalty Fees received for creator 2", async () =>{
       await market.connect(creator2).retrieveRoyalty(nft2.address, creator2.address);
-      expect(await token.balanceOf(creator2.address)).to.eq(parseEther('3.8'));
+      expect(await token.balanceOf(creator2.address)).to.eq(parseEther('9.8'));
     });
   });
 });
