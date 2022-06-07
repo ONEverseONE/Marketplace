@@ -83,16 +83,16 @@ contract Collection is Ownable{
         emit tokenListed(_contract,msg.sender, tokenId,2,price,duration);
     }
 
-    function buyToken(address _contract,uint tokenId,uint amount) external {
+    function buyToken(address _contract,uint tokenId) external {
         IERC721 NFT = IERC721(_contract);
         require(listed[_contract][tokenId] == 1,"Token not direct listed");
         directListing storage listing = directSales[_contract][tokenId];
         require(listing.owner != msg.sender,"Can't buy own token");
-        require(amount >= listing.price,"Not enough paid");
-        require(PaymentToken.transferFrom(msg.sender,address(this),amount),"Payment not received");
-        uint fee = amount * FEE/10_000;
-        uint royalty = amount * royaltyInfo[_contract].royaltyPercentage / 10_000;
-        PaymentToken.transfer(listing.owner,amount-fee-royalty);
+        // require(amount >= listing.price,"Not enough paid");
+        require(PaymentToken.transferFrom(msg.sender,address(this),listing.price),"Payment not received");
+        uint fee = listing.price * FEE/10_000;
+        uint royalty = listing.price * royaltyInfo[_contract].royaltyPercentage / 10_000;
+        PaymentToken.transfer(listing.owner,listing.price-fee-royalty);
         FEEBalance += fee;
         royaltyInfo[_contract].royaltyBalance += royalty;
         NFT.transferFrom(address(this),msg.sender,tokenId);
