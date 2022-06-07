@@ -46,7 +46,7 @@ async function main() {
     network:"harmonytestnet"
   });
   console.log("Setting a market for our NFT contract");
-  greeter.setMarketplace(nft.address,ethers.constants.AddressZero,0);
+  await greeter.setMarketplace(nft.address,ethers.constants.AddressZero,0);
   console.log("Marketplace set and ready to use");
 }
 

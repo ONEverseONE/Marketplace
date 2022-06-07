@@ -20,16 +20,16 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
  module.exports = {
   solidity: "0.8.7",
-  // networks:{
-  //   harmonytestnet:{
-  //     url:"https://api.s0.b.hmny.io",
-  //     accounts: [`${process.env.PRIVATE_KEY}`]
-  //   }
-  // },
-  // etherscan: {
-  //   apiKey: {
-  //     harmonyTest: `${process.env.ETHERSCAN_KEY}`,
-  //   }
-  // }
+  networks:{
+    harmonytestnet:{
+      url:"https://api.s0.b.hmny.io",
+      accounts: [`${process.env.PRIVATE_KEY}`]
+    }
+  },
+  etherscan: {
+    apiKey: {
+      harmonyTest: `${process.env.ETHERSCAN_KEY}`,
+    }
+  }
 };
 
